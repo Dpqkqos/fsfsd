@@ -1,7 +1,11 @@
 <template>
   <div class="app">
     <UserCard :user="user" />
-    <EmotionTable :emotions="emotions" @add-emotion="addEmotion" />
+    <EmotionTable 
+      :emotions="emotions" 
+      @add-emotion="addEmotion"
+      class="mt-4"
+    />
   </div>
 </template>
 
@@ -18,122 +22,80 @@ export default {
         avatar: '',
         name: '',
         daysOnPlatform: 0,
-        dailyForecast: '',
       },
       emotions: [],
     };
   },
   async created() {
-    // Автоматическая настройка приложения
-    this.setupTelegramApp();
-
-    // Получаем данные пользователя из Telegram Web App
     const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-
     if (tgUser) {
-      this.user = {
-        avatar: tgUser.photo_url || 'https://example.com/default-avatar.jpg',
-        name: tgUser.first_name || 'Пользователь',
-        daysOnPlatform: 0,
-        dailyForecast: 'Прогноз дня',
-      };
-
-      // Загрузка данных с сервера
       try {
+        // Регистрация/получение пользователя
+        await this.registerUser(tgUser);
+        
+        // Загрузка данных
         const response = await axios.get(`/api/user/${tgUser.id}`);
-        this.user.daysOnPlatform = response.data.days_on_platform;
-        this.emotions = response.data.daily_emotions.map((emotion, index) => ({
-          day: index + 1,
-          state: emotion,
+        this.user = {
+          avatar: response.data.avatar,
+          name: response.data.name,
+          daysOnPlatform: response.data.days_on_platform,
+        };
+        this.emotions = response.data.daily_emotions.map((e, i) => ({
+          day: i + 1,
+          state: e,
+          id: Date.now() + i // Уникальный ID для анимаций
         }));
       } catch (error) {
-        console.error('Ошибка при загрузке данных:', error);
+        console.error('Ошибка:', error);
       }
     }
   },
   methods: {
-    // Настройка Telegram Web App
-    setupTelegramApp() {
-      const tg = window.Telegram.WebApp;
-
-      // Развернуть приложение на весь экран
-      tg.expand();
-
-      // Установить цвет фона
-      tg.backgroundColor = '#6a11cb';
-      tg.headerColor = '#6a11cb';
-
-      // Установить цвет текста
-      tg.setHeaderColor('#6a11cb');
-      tg.setBackgroundColor('#6a11cb');
-
-      // Включить кнопку "Назад"
-      tg.BackButton.show();
-      tg.BackButton.onClick(() => {
-        tg.close();
-      });
+    async registerUser(tgUser) {
+      try {
+        await axios.post('/api/register', {
+          tg_id: tgUser.id,
+          name: tgUser.first_name,
+          avatar: tgUser.photo_url,
+        });
+      } catch (error) {
+        if (error.response?.status !== 409) { // Игнорируем ошибку "уже существует"
+          throw error;
+        }
+      }
     },
     async addEmotion(emotion) {
       try {
         const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-        if (!tgUser) return;
-
         const response = await axios.post(`/api/emotion/${tgUser.id}`, { emotion });
+        
         if (response.status === 200) {
-          this.emotions.push({ day: this.emotions.length + 1, state: emotion });
+          this.emotions = [
+            ...this.emotions,
+            {
+              day: this.emotions.length + 1,
+              state: emotion,
+              id: Date.now()
+            }
+          ];
         }
       } catch (error) {
-        console.error('Ошибка при добавлении эмоции:', error);
+        console.error('Ошибка:', error);
       }
     },
   },
 };
 </script>
 
-<style>
-/* Глобальные стили для Telegram Mini Apps */
+<style scoped>
 .app {
-  padding: 20px;
-  background: var(--tg-theme-bg-color, #6a11cb);
-  color: var(--tg-theme-text-color, white);
-  font-family: 'Roboto', sans-serif;
+  background: white;
   min-height: 100vh;
+  padding: 16px;
+  font-family: 'Roboto', sans-serif;
 }
 
-/* Стили для карточки пользователя */
-.user-card {
-  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
-  border-radius: 20px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  animation: fadeIn 1s ease-in-out;
-}
-
-/* Стили для кнопок */
-button {
-  background: var(--tg-theme-button-color, linear-gradient(45deg, #ff7e5f, #feb47b));
-  color: var(--tg-theme-button-text-color, white);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-
-button:hover {
-  transform: scale(1.05);
-}
-
-/* Анимации */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+.mt-4 {
+  margin-top: 1.5rem;
 }
 </style>

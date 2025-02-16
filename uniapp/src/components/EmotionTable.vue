@@ -64,79 +64,30 @@
   
   <style scoped>
   .emotion-table {
-    margin-top: 20px;
+    background: white;
   }
   
-  .add-button {
-    background: linear-gradient(45deg, #ff7e5f, #feb47b);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
-    cursor: pointer;
-    margin-bottom: 20px;
-    transition: transform 0.2s;
-  }
-  
-  .add-button:hover {
-    transform: scale(1.05);
-  }
-  
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-  
-  th, td {
-    text-align: center;
-    padding: 10px;
-  }
-  
-  .day-circle, .state-circle {
-    display: inline-block;
+  .day-circle {
     width: 40px;
     height: 40px;
-    line-height: 40px;
-    border-radius: 50%;
+    border: 2px solid;
+    border-image: linear-gradient(45deg, #ff6b6b, #d459fd) 1;
     background: white;
-    color: black;
-    text-align: center;
-    font-weight: bold;
-    transition: transform 0.2s;
   }
   
-  .day-circle:hover, .state-circle:hover {
-    transform: scale(1.1);
+  .state-circle {
+    background: linear-gradient(45deg, #ff6b6b, #d459fd);
+    color: white;
+    width: 40px;
+    height: 40px;
   }
   
-  .modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.3s ease-in-out;
+  /* Анимация добавления */
+  .list-enter-active {
+    transition: all 0.3s ease;
   }
-  
-  .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    color: black;
-  }
-  
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  .list-enter-from {
+    opacity: 0;
+    transform: translateX(-30px);
   }
   </style>
