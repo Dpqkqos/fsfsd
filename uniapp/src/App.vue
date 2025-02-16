@@ -1,98 +1,139 @@
 <template>
-  <div class="bg-white min-h-screen p-6 flex flex-col items-center">
-    
-    <!-- Личная карточка -->
-    <div class="w-full max-w-2xl bg-gray-100 rounded-2xl p-4 flex items-center shadow-md">
-      <img :src="user.avatar" alt="Аватар" class="w-16 h-16 rounded-full mr-4" />
-      <div>
-        <h2 class="text-xl font-bold">{{ user.name }}</h2>
-        <p class="text-gray-600">На платформе: {{ user.days }} дней</p>
-        <p class="text-gray-600">Последний запрос: {{ user.lastRequest }}</p>
-      </div>
-    </div>
-
-    <!-- Прогноз на день -->
-    <div class="w-full max-w-2xl bg-gray-100 rounded-2xl p-4 mt-4 shadow-md">
-      <h3 class="text-lg font-semibold">Прогноз на день</h3>
-      <p class="text-gray-700">{{ dailyForecast }}</p>
-    </div>
-
-    <!-- Ведение эмоционального состояния -->
-    <div class="w-full max-w-2xl mt-4">
-      <div class="flex justify-between items-center">
-        <h3 class="text-lg font-semibold">Ведение эмоционального состояния</h3>
-        <button @click="showModal = true" class="bg-blue-500 text-white px-4 py-2 rounded-xl">Добавить состояние</button>
-      </div>
-      <div class="mt-2 space-y-2">
-        <div v-for="(emotion, index) in emotions" :key="index" class="flex items-center">
-          <div class="w-12 h-12 flex items-center justify-center rounded-2xl border-2 border-gradient bg-white text-lg font-bold">
-            {{ emotion.day }}
-          </div>
-          <div class="ml-4 bg-gray-100 rounded-2xl p-3 w-full">
-            {{ emotion.state }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Модальное окно для ввода состояния -->
-    <div v-if="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div class="bg-white p-6 rounded-xl shadow-lg w-80">
-        <h3 class="text-lg font-semibold mb-2">Введите ваше состояние</h3>
-        <input v-model="newEmotion" class="w-full p-2 border rounded-lg mb-4" placeholder="Ваше состояние..." />
-        <div class="flex justify-end">
-          <button @click="showModal = false" class="mr-2 px-4 py-2 bg-gray-400 text-white rounded-lg">Отмена</button>
-          <button @click="submitEmotion" class="px-4 py-2 bg-blue-500 text-white rounded-lg">Сохранить</button>
-        </div>
-      </div>
-    </div>
+  <div class="app">
+    <UserCard :user="user" />
+    <EmotionTable :emotions="emotions" @add-emotion="addEmotion" />
   </div>
 </template>
 
 <script>
+import UserCard from './components/UserCard.vue';
+import EmotionTable from './components/EmotionTable.vue';
 import axios from 'axios';
 
 export default {
+  components: { UserCard, EmotionTable },
   data() {
     return {
       user: {
         avatar: '',
         name: '',
-        days: 0,
-        lastRequest: ''
+        daysOnPlatform: 0,
+        dailyForecast: '',
       },
-      dailyForecast: "",
       emotions: [],
-      showModal: false,
-      newEmotion: ""
     };
   },
   async created() {
-    const response = await axios.get("/api/user/12345");
-    this.user = {
-      avatar: response.data.avatar,
-      name: response.data.name,
-      days: response.data.days_on_platform,
-      lastRequest: response.data.last_request
-    };
-    this.dailyForecast = response.data.daily_forecast;
-    this.emotions = response.data.daily_emotions;
-  },
-  methods: {
-    async submitEmotion() {
-      if (this.newEmotion.trim()) {
-        await axios.post(`/api/emotion/${this.user.id}`, { emotion: this.newEmotion });
-        this.emotions.push({ day: this.emotions.length + 1, state: this.newEmotion });
-        this.newEmotion = "";
-        this.showModal = false;
+    // Автоматическая настройка приложения
+    this.setupTelegramApp();
+
+    // Получаем данные пользователя из Telegram Web App
+    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+
+    if (tgUser) {
+      this.user = {
+        avatar: tgUser.photo_url || 'https://example.com/default-avatar.jpg',
+        name: tgUser.first_name || 'Пользователь',
+        daysOnPlatform: 0,
+        dailyForecast: 'Прогноз дня',
+      };
+
+      // Загрузка данных с сервера
+      try {
+        const response = await axios.get(`/api/user/${tgUser.id}`);
+        this.user.daysOnPlatform = response.data.days_on_platform;
+        this.emotions = response.data.daily_emotions.map((emotion, index) => ({
+          day: index + 1,
+          state: emotion,
+        }));
+      } catch (error) {
+        console.error('Ошибка при загрузке данных:', error);
       }
     }
-  }
+  },
+  methods: {
+    // Настройка Telegram Web App
+    setupTelegramApp() {
+      const tg = window.Telegram.WebApp;
+
+      // Развернуть приложение на весь экран
+      tg.expand();
+
+      // Установить цвет фона
+      tg.backgroundColor = '#6a11cb';
+      tg.headerColor = '#6a11cb';
+
+      // Установить цвет текста
+      tg.setHeaderColor('#6a11cb');
+      tg.setBackgroundColor('#6a11cb');
+
+      // Включить кнопку "Назад"
+      tg.BackButton.show();
+      tg.BackButton.onClick(() => {
+        tg.close();
+      });
+    },
+    async addEmotion(emotion) {
+      try {
+        const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+        if (!tgUser) return;
+
+        const response = await axios.post(`/api/emotion/${tgUser.id}`, { emotion });
+        if (response.status === 200) {
+          this.emotions.push({ day: this.emotions.length + 1, state: emotion });
+        }
+      } catch (error) {
+        console.error('Ошибка при добавлении эмоции:', error);
+      }
+    },
+  },
 };
 </script>
 
 <style>
-.border-gradient {
-  border-image: linear-gradient(45deg, #ff7e5f, #feb47b) 1;
+/* Глобальные стили для Telegram Mini Apps */
+.app {
+  padding: 20px;
+  background: var(--tg-theme-bg-color, #6a11cb);
+  color: var(--tg-theme-text-color, white);
+  font-family: 'Roboto', sans-serif;
+  min-height: 100vh;
+}
+
+/* Стили для карточки пользователя */
+.user-card {
+  background: var(--tg-theme-secondary-bg-color, rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Стили для кнопок */
+button {
+  background: var(--tg-theme-button-color, linear-gradient(45deg, #ff7e5f, #feb47b));
+  color: var(--tg-theme-button-text-color, white);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>
