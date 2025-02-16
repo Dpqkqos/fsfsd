@@ -4,12 +4,10 @@
     <EmotionTable :emotions="emotions" @add-emotion="addEmotion" />
   </div>
 </template>
-
 <script>
 import UserCard from '../components/UserCard.vue';
 import EmotionTable from '../components/EmotionTable.vue';
 import apiClient from '../api';
-
 export default {
   components: { UserCard, EmotionTable },
   data() {
@@ -22,7 +20,6 @@ export default {
     try {
       const response = await apiClient.get('/api/user/12345');
       this.user = response.data;
-
       this.emotions = response.data.daily_emotions.map((emotion, index) => ({
         day: index + 1,
         state: emotion,
