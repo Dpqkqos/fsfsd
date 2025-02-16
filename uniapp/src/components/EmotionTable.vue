@@ -1,30 +1,19 @@
 <template>
   <div class="emotion-table">
-    <button @click="openModal" class="add-button">Добавить состояние</button>
-    <table>
-      <thead>
-        <tr>
-          <th>День</th>
-          <th>Эмоциональное состояние</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(emotion, index) in emotions" :key="index">
-          <td>
-            <div class="day-circle">{{ emotion.day }}</div>
-          </td>
-          <td>
-            <div class="state-circle">{{ emotion.state }}</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <button @click="showModal = true" class="add-button">+ Добавить состояние</button>
+    
     <div v-if="showModal" class="modal">
       <div class="modal-content">
-        <h3>Введите ваше состояние</h3>
-        <input v-model="newEmotion" placeholder="Ваше состояние..." />
+        <input v-model="newEmotion" placeholder="Ваше состояние...">
         <button @click="submitEmotion">Сохранить</button>
-        <button @click="closeModal">Отмена</button>
+        <button @click="showModal = false">Отмена</button>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <div v-for="emotion in emotions" :key="emotion.id" class="emotion-row">
+        <div class="day-box">{{ emotion.day }}</div>
+        <div class="emotion-box">{{ emotion.state }}</div>
       </div>
     </div>
   </div>
@@ -32,111 +21,94 @@
 
 <script>
 export default {
-  props: {
-    emotions: {
-      type: Array,
-      required: true,
-    },
-  },
+  props: ['emotions'],
   data() {
     return {
       showModal: false,
-      newEmotion: '',
-    };
+      newEmotion: ''
+    }
   },
   methods: {
-    openModal() {
-      this.showModal = true;
-    },
-    closeModal() {
-      this.showModal = false;
-    },
     submitEmotion() {
       if (this.newEmotion.trim()) {
-        this.$emit('add-emotion', this.newEmotion);
-        this.closeModal();
+        this.$emit('add-emotion', this.newEmotion.trim());
+        this.showModal = false;
         this.newEmotion = '';
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>
 
-<style scoped>
+<style>
 .emotion-table {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .add-button {
-  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+  background: linear-gradient(45deg, #FF6B6B, #D459FD);
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 20px;
+  padding: 12px 24px;
+  border-radius: 8px;
   cursor: pointer;
-  margin-bottom: 20px;
+  font-weight: 500;
   transition: transform 0.2s;
 }
 
 .add-button:hover {
-  transform: scale(1.05);
+  transform: translateY(-1px);
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
+.table-container {
+  margin-top: 16px;
 }
 
-th, td {
-  text-align: center;
-  padding: 10px;
+.emotion-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
-.day-circle, .state-circle {
-  display: inline-block;
-  width: 40px;
-  height: 40px;
-  line-height: 40px;
-  border-radius: 50%;
+.day-box {
+  width: 48px;
+  height: 48px;
+  border: 2px solid;
+  border-image: linear-gradient(45deg, #FF6B6B, #D459FD) 1;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
   background: white;
-  color: black;
-  text-align: center;
-  font-weight: bold;
-  transition: transform 0.2s;
 }
 
-.day-circle:hover, .state-circle:hover {
-  transform: scale(1.1);
+.emotion-box {
+  flex: 1;
+  background: linear-gradient(45deg, #FF6B6B, #D459FD);
+  color: white;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.3);
   display: flex;
-  justify-content: center;
   align-items: center;
-  animation: fadeIn 0.3s ease-in-out;
+  justify-content: center;
 }
 
 .modal-content {
   background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  color: black;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  padding: 24px;
+  border-radius: 12px;
+  width: 80%;
+  max-width: 400px;
 }
 </style>
