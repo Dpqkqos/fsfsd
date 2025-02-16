@@ -1,9 +1,14 @@
 <template>
   <div class="user-card">
-    <img :src="user.avatar" class="avatar" alt="Аватар">
-    <div class="info">
-      <h2>{{ user.name }}</h2>
-      <p>На платформе: {{ user.daysOnPlatform }} дней</p>
+    <div class="card-header">
+      <img :src="user.avatar" alt="Аватар" class="avatar" />
+      <div class="info">
+        <h2>{{ user.name }}</h2>
+        <p>На платформе: {{ user.daysOnPlatform }} дней</p>
+      </div>
+    </div>
+    <div class="forecast">
+      <p><strong>Прогноз на день:</strong> {{ user.dailyForecast }}</p>
     </div>
   </div>
 </template>
@@ -13,42 +18,41 @@ export default {
   props: {
     user: {
       type: Object,
-      required: true
-    }
-  }
-}
+      required: true,
+    },
+  },
+};
 </script>
 
-<style>
+<style scoped>
 .user-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 16px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  background: linear-gradient(45deg, #ff7e5f, #feb47b);
+  border-radius: 20px;
+  padding: 20px;
+  color: white;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
 }
 
 .avatar {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
-  margin-right: 16px;
-  border: 2px solid transparent;
-  background-image: linear-gradient(white, white), 
-                    linear-gradient(45deg, #FF6B6B, #D459FD);
-  background-origin: border-box;
-  background-clip: content-box, border-box;
+  margin-right: 10px;
 }
 
-.info h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  color: #333;
+.info {
+  text-align: left;
 }
 
-.info p {
-  margin: 4px 0 0;
-  color: #666;
+.forecast {
+  margin-top: 10px;
 }
 </style>

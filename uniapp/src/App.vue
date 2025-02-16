@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div>
     <UserCard :user="user" />
     <EmotionTable :emotions="emotions" @add-emotion="addEmotion" />
   </div>
@@ -18,62 +18,42 @@ export default {
         avatar: '',
         name: '',
         daysOnPlatform: 0,
+        dailyForecast: '',
       },
       emotions: [],
     };
   },
   async created() {
-    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-    if (tgUser) {
-      try {
-        // Регистрация пользователя
-        await axios.post('/api/register', {
-          tg_id: tgUser.id,
-          name: tgUser.first_name,
-          avatar: tgUser.photo_url,
-        });
+    try {
+      // Загрузка данных пользователя
+      const response = await axios.get('/api/user/12345');
+      this.user = {
+        avatar: response.data.avatar,
+        name: response.data.name,
+        daysOnPlatform: response.data.days_on_platform,
+        dailyForecast: response.data.daily_forecast,
+      };
 
-        // Загрузка данных
-        const userResponse = await axios.get(`/api/user/${tgUser.id}`);
-        this.user = userResponse.data;
-        
-        const emotionsResponse = await axios.get(`/api/emotions/${tgUser.id}`);
-        this.emotions = emotionsResponse.data.map((e, i) => ({
-          day: i + 1,
-          state: e,
-          id: Date.now() + i
-        }));
-      } catch (error) {
-        console.error('Ошибка:', error);
-      }
+      // Загрузка эмоций
+      this.emotions = response.data.daily_emotions.map((emotion, index) => ({
+        day: index + 1,
+        state: emotion,
+      }));
+    } catch (error) {
+      console.error('Ошибка при загрузке данных:', error);
     }
   },
   methods: {
     async addEmotion(emotion) {
       try {
-        const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-        await axios.post(`/api/emotion/${tgUser.id}`, { emotion });
-        this.emotions = [
-          ...this.emotions,
-          {
-            day: this.emotions.length + 1,
-            state: emotion,
-            id: Date.now()
-          }
-        ];
+        const response = await axios.post('/api/emotion/12345', { emotion });
+        if (response.status === 200) {
+          this.emotions.push({ day: this.emotions.length + 1, state: emotion });
+        }
       } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('Ошибка при добавлении эмоции:', error);
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
-
-<style>
-.app {
-  padding: 20px;
-  background: white;
-  min-height: 100vh;
-  font-family: 'Roboto', sans-serif;
-}
-</style>
