@@ -386,7 +386,6 @@ export default {
 </script>
 
 <style>
-/* Базовые стили */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -454,6 +453,7 @@ html, body {
     -webkit-overflow-scrolling: touch;
   }
 }
+
 /* Анимации */
 .slide-up-enter-active,
 .slide-up-leave-active {
