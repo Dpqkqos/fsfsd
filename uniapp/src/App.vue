@@ -396,6 +396,7 @@ html, body {
   height: 100%;
   font-family: 'Roboto', sans-serif;
   line-height: 1.6;
+  background-attachment: fixed
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   background: linear-gradient(45deg, #ff0e6b, #ff05f7, #6c11ff);
